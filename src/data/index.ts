@@ -1,10 +1,10 @@
 import data from './data.json';
-import { EMessage, TProduct } from '../type';
+import { EMessage, IProduct } from '../type';
 import httpStatusCode from '../type/httpStatusCode';
 
 export const getProductsData = () => Promise.resolve(data);
 export const getProductsById = (id: string) => {
-  const product: TProduct | undefined = data.find((p) => p.id === id);
+  const product: IProduct | undefined = data.find((p) => p.id === id);
   if (product) {
     return Promise.resolve(product);
   }
