@@ -4,6 +4,7 @@ import { TError, TGetProductsByIdEvent } from '../type/index';
 import { getRecord } from '../dynamoDB';
 
 export const handler = async (event: TGetProductsByIdEvent) => {
+  console.log('getProductById', event);
   try {
     const { productId } = event.pathParameters;
     const { TABLE_NAME_PRODUCT, TABLE_NAME_STOCK } = process.env;

@@ -25,6 +25,7 @@ export enum EMessage {
   unableToGetProductsList = 'Unable to get products list.',
   missingBody = 'Missing body',
   unableToCreateProduct = 'Unable to create product',
+  wrongProductData = 'Wrong product data',
 }
 
 export type TError = {

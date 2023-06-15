@@ -7,6 +7,22 @@ import { v4 as uuidv4 } from 'uuid';
 
 // @ts-ignore
 export const handler: Handler = async (event) => {
+  const validateBody = (body: TCreatedProduct) => {
+    const { description, title, price, count } = body;
+    if (!description || !title || !price || !count) {
+      return false;
+    }
+    if (
+      typeof description !== 'string' ||
+      typeof title !== 'string' ||
+      typeof price !== 'number' ||
+      typeof count !== 'number'
+    ) {
+      return false;
+    }
+    return true;
+  };
+  console.log('createProduct', event);
   try {
     if (!event.body) {
       throw { error: httpStatusCode.BAD_REQUEST, message: EMessage.missingBody };
@@ -16,6 +32,9 @@ export const handler: Handler = async (event) => {
     const body: TCreatedProduct = JSON.parse(event.body);
     const { description, title, price, count } = body;
     const id = uuidv4();
+    if (!validateBody(body)) {
+      throw { error: httpStatusCode.BAD_REQUEST, message: EMessage.wrongProductData };
+    }
     const product: IProduct = { description, id, title, price };
     const stock: IStock = { product_id: id, count };
 
