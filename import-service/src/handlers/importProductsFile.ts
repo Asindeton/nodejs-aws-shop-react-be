@@ -2,11 +2,10 @@ import { buildResponse } from '../utils/index';
 import { EMessage, TError } from '../type';
 import httpStatusCode from '../type/httpStatusCode';
 
-import { Handler } from 'aws-cdk-lib/aws-lambda';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-export const handler: Handler = async (event: unknown) => {
+export const handler = async (event: unknown) => {
   try {
     // @ts-ignore
     const name = event.queryStringParameters?.name;
@@ -30,7 +29,7 @@ export const handler: Handler = async (event: unknown) => {
     });
   } catch (e) {
     const { error, message } = e as TError;
-    return buildResponse(error || httpStatusCode.NOT_FOUND, {
+    return buildResponse(error || httpStatusCode.INTERNAL_SERVER_ERROR, {
       message: message || EMessage.unableToGetProductsList,
     });
   }
