@@ -24,6 +24,6 @@ export const CORS_PREFLIGHT_SETTINGS = {
 
 export const BUCKET_CORS_SETTINGS = {
   allowedHeaders: ['*'],
-  allowedMethods: [HttpMethods.GET, HttpMethods.PUT, HttpMethods.POST, HttpMethods.DELETE, HttpMethods.HEAD],
+  allowedMethods: [HttpMethods.GET, HttpMethods.PUT],
   allowedOrigins: ['*'],
 };

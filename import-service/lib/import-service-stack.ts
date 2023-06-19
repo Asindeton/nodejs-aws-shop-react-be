@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as apiGw from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
@@ -14,6 +15,9 @@ export class ImportServiceStack extends cdk.Stack {
 
     const importBucket = new s3.Bucket(this, 'importServiceBucket', {
       bucketName: process.env.IMPORT_SERVICE_BUCKET_NAME,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
     });
 
     const environment = {
@@ -26,6 +30,13 @@ export class ImportServiceStack extends cdk.Stack {
       functionName: 'importProductFiles',
       runtime: lambda.Runtime.NODEJS_18_X,
       entry: 'src/handlers/importProductsFile.ts',
+    });
+
+    const importFileParser = new NodejsFunction(this, 'importProductParser', {
+      environment,
+      functionName: 'importFileParser',
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: 'src/handlers/importFileParser.ts',
     });
 
     const api = new apiGw.RestApi(this, 'import-api', {
@@ -52,8 +63,11 @@ export class ImportServiceStack extends cdk.Stack {
 
     const importProductFilesResource = api.root.addResource('import');
 
-    importBucket.grantReadWrite(importProductFiles);
     importBucket.addCorsRule(BUCKET_CORS_SETTINGS);
+    importBucket.grantReadWrite(importProductFiles);
+
+    importBucket.grantReadWrite(importFileParser);
+    importBucket.grantDelete(importFileParser);
 
     importProductFilesResource.addCorsPreflight(CORS_PREFLIGHT_SETTINGS);
     importProductFilesResource.addMethod('GET', importProductFilesIntegration, {
@@ -79,6 +93,10 @@ export class ImportServiceStack extends cdk.Stack {
           },
         },
       ],
+    });
+
+    importBucket.addEventNotification(s3.EventType.OBJECT_CREATED, new s3n.LambdaDestination(importFileParser), {
+      prefix: 'uploaded',
     });
   }
 }
