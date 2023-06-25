@@ -1,6 +1,6 @@
-import { buildResponse } from '../utils/index';
+import { buildResponse } from '../utils';
 import httpStatusCode from '../type/httpStatusCode';
-import { EMessage, TError } from '../type/index';
+import { EMessage, TError } from '../type';
 import { getAllData } from '../dynamoDB';
 
 export const handler = async (event: unknown) => {

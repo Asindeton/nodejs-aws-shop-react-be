@@ -1,6 +1,6 @@
-import { buildResponse } from '../utils/index';
+import { buildResponse } from '../utils';
 import httpStatusCode from '../type/httpStatusCode';
-import { TError, TGetProductsByIdEvent } from '../type/index';
+import { TError, TGetProductsByIdEvent } from '../type';
 import { getRecord } from '../dynamoDB';
 
 export const handler = async (event: TGetProductsByIdEvent) => {

@@ -1,6 +1,6 @@
-import { buildResponse } from '../utils/index';
+import { buildResponse } from '../utils';
 import httpStatusCode from '../type/httpStatusCode';
-import { EMessage, IProduct, IStock, TCreatedProduct, TError } from '../type/index';
+import { EMessage, IProduct, IStock, TCreatedProduct, TError } from '../type';
 import { createProduct } from '../dynamoDB';
 import { Handler } from 'aws-cdk-lib/aws-lambda';
 import { v4 as uuidv4 } from 'uuid';

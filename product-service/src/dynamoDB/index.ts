@@ -1,6 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, ScanCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
-import { IProduct, IStock } from '../type/index';
+import { IProduct, IStock } from '../type';
 
 const client = new DynamoDBClient({});
 const dynamoDbDocClient = DynamoDBDocumentClient.from(client);
