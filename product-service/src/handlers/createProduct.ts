@@ -1,4 +1,4 @@
-import { buildResponse } from '../utils';
+import { buildResponse, validateBody } from '../utils';
 import httpStatusCode from '../type/httpStatusCode';
 import { EMessage, IProduct, IStock, TCreatedProduct, TError } from '../type';
 import { createProduct } from '../dynamoDB';
@@ -7,21 +7,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 // @ts-ignore
 export const handler: Handler = async (event) => {
-  const validateBody = (body: TCreatedProduct) => {
-    const { description, title, price, count } = body;
-    if (!description || !title || !price || !count) {
-      return false;
-    }
-    if (
-      typeof description !== 'string' ||
-      typeof title !== 'string' ||
-      typeof price !== 'number' ||
-      typeof count !== 'number'
-    ) {
-      return false;
-    }
-    return true;
-  };
   console.log('createProduct', event);
   try {
     if (!event.body) {
@@ -40,7 +25,8 @@ export const handler: Handler = async (event) => {
 
     const { TABLE_NAME_PRODUCT, TABLE_NAME_STOCK } = process.env;
 
-    await createProduct(product, stock, TABLE_NAME_PRODUCT ?? 'Product', TABLE_NAME_STOCK ?? 'Stock');
+    const response = await createProduct(product, stock, TABLE_NAME_PRODUCT ?? 'Product', TABLE_NAME_STOCK ?? 'Stock');
+    console.log('response', response);
     return buildResponse(httpStatusCode.OK, { result: { id, description, title, price, count } });
   } catch (err) {
     const { error, message } = err as TError;

@@ -3,6 +3,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as apiGw from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
 import { BUCKET_CORS_SETTINGS, CORS_PREFLIGHT_SETTINGS } from '../src/utils/index';
@@ -20,9 +21,12 @@ export class ImportServiceStack extends cdk.Stack {
       autoDeleteObjects: true,
     });
 
+    const queue = sqs.Queue.fromQueueArn(this, 'importFileQueue', process.env.QUEUE_ARN as string);
+
     const environment = {
       BUCKET_NAME: importBucket.bucketName,
       BUCKET_ARN: importBucket.bucketArn,
+      SQS_URL: queue.queueUrl,
     };
 
     const importProductFiles = new NodejsFunction(this, 'GetProductsListHandler', {
@@ -68,6 +72,8 @@ export class ImportServiceStack extends cdk.Stack {
 
     importBucket.grantReadWrite(importFileParser);
     importBucket.grantDelete(importFileParser);
+
+    queue.grantSendMessages(importFileParser);
 
     importProductFilesResource.addCorsPreflight(CORS_PREFLIGHT_SETTINGS);
     importProductFilesResource.addMethod('GET', importProductFilesIntegration, {
