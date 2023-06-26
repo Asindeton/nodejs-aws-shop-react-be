@@ -9,7 +9,7 @@ import { snsClient } from '../libs/sns';
 import { PublishCommand } from '@aws-sdk/client-sns';
 
 // @ts-ignore
-export const handler: Handler = async (event) => {
+export const handler = async (event) => {
   try {
     const { TABLE_NAME_PRODUCT, TABLE_NAME_STOCK, SNS_ARN } = process.env;
     const { Records } = event;

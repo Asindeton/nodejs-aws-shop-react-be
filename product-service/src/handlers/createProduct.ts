@@ -6,7 +6,7 @@ import { Handler } from 'aws-cdk-lib/aws-lambda';
 import { v4 as uuidv4 } from 'uuid';
 
 // @ts-ignore
-export const handler: Handler = async (event) => {
+export const handler = async (event) => {
   console.log('createProduct', event);
   try {
     if (!event.body) {
