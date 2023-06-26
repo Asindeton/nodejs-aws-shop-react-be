@@ -8,6 +8,7 @@ import { createProduct } from '../dynamoDB';
 import { snsClient } from '../libs/sns';
 import { PublishCommand } from '@aws-sdk/client-sns';
 
+// @ts-ignore
 export const handler: Handler = async (event) => {
   try {
     const { TABLE_NAME_PRODUCT, TABLE_NAME_STOCK, SNS_ARN } = process.env;
@@ -24,8 +25,8 @@ export const handler: Handler = async (event) => {
       const product: IProduct = { description, id, title, price: Number(price) };
       const stock: IStock = { product_id: id, count: Number(count) };
 
-      const result = await createProduct(product, stock, TABLE_NAME_PRODUCT ?? 'Product', TABLE_NAME_STOCK ?? 'Stock');
-      console.log('result', result);
+      await createProduct(product, stock, TABLE_NAME_PRODUCT ?? 'Product', TABLE_NAME_STOCK ?? 'Stock');
+
       await snsClient.send(
         new PublishCommand({
           Subject: 'New product',

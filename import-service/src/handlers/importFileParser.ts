@@ -1,7 +1,7 @@
 import { S3Event } from 'aws-lambda';
 import { CopyObjectCommand, DeleteObjectCommand, GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { PassThrough, Readable } from 'stream';
-import { buildResponse } from '../utils/index';
+import { buildResponse, s3Client, sqsClient } from '../utils/index';
 import { EMessage, TError } from '../type/index';
 import httpStatusCode from '../type/httpStatusCode';
 import csv from 'csv-parser';
@@ -15,55 +15,54 @@ export const handler = async (event: S3Event) => {
     Key: key,
   };
   try {
-    const client = new S3Client({ region: process.env.AWS_REGION });
-    const sqsClient = new SQSClient({ region: process.env.AWS_REGION });
-
-    const file = await client.send(new GetObjectCommand(params));
-    const data = file.Body;
-    if (!(data instanceof Readable)) {
+    const file = await s3Client.send(new GetObjectCommand(params));
+    const readableStream = file.Body;
+    if (!(readableStream instanceof Readable)) {
       throw new Error('Failed to read file');
     }
 
     await new Promise((resolve, reject) => {
-      const stream = data?.pipe(new PassThrough());
-      stream
-        ?.pipe(csv())
+      readableStream
+        .pipe(csv())
         .on('data', async (data) => {
-          stream.pause();
+          readableStream.pause();
           try {
-            console.log('Sending message to SQS', data);
             await sqsClient.send(
               new SendMessageCommand({
                 QueueUrl: process.env.SQS_URL ?? '',
                 MessageBody: JSON.stringify(data),
               }),
             );
+            console.log('Sending message to SQS', data);
           } catch (e) {
+            console.log('Error sending message to SQS', data);
             reject(e);
           }
-          stream.resume();
+          readableStream.resume();
         })
         .on('error', reject)
-        .on('end', async () => {
-          console.log({
-            Bucket: bucket,
-            CopySource: bucket + '/' + key,
-            Key: key.replace('uploaded', 'parsed'),
-            sqsUrl: process.env.SQS_URL,
-          });
-          await client.send(
-            new CopyObjectCommand({
-              Bucket: bucket,
-              CopySource: bucket + '/' + key,
-              Key: key.replace('uploaded', 'parsed'),
-            }),
-          );
-          console.log('Copied into parsed folder');
-          await client.send(new DeleteObjectCommand(params));
-          console.log('Deleted from uploaded folder');
-          resolve(null);
-        });
+        .on('end', resolve);
     });
+
+    console.log({
+      Bucket: bucket,
+      CopySource: bucket + '/' + key,
+      Key: key.replace('uploaded', 'parsed'),
+      sqsUrl: process.env.SQS_URL,
+    });
+
+    await s3Client.send(
+      new CopyObjectCommand({
+        Bucket: bucket,
+        CopySource: bucket + '/' + key,
+        Key: key.replace('uploaded', 'parsed'),
+      }),
+    );
+
+    console.log('Copied into parsed folder');
+    await s3Client.send(new DeleteObjectCommand(params));
+    console.log('Deleted from uploaded folder');
+
     return buildResponse(200, { message: 'File parsed' });
   } catch (e) {
     const { error, message } = e as TError;

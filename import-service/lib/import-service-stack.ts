@@ -7,7 +7,6 @@ import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
 import { BUCKET_CORS_SETTINGS, CORS_PREFLIGHT_SETTINGS } from '../src/utils/index';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
 import 'dotenv/config';
 
 export class ImportServiceStack extends cdk.Stack {
@@ -102,7 +101,7 @@ export class ImportServiceStack extends cdk.Stack {
     });
 
     importBucket.addEventNotification(s3.EventType.OBJECT_CREATED, new s3n.LambdaDestination(importFileParser), {
-      prefix: 'uploaded',
+      prefix: 'uploaded/',
     });
   }
 }
