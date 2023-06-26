@@ -4,7 +4,6 @@ import * as apiGw from 'aws-cdk-lib/aws-apigateway';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as sns from 'aws-cdk-lib/aws-sns';
-import { SubscriptionProtocol } from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { ErrorSchema, ProductListSchema, ProductSchema } from '../src/model';
@@ -25,14 +24,43 @@ export class NodejsAwsShopReactBeStack extends cdk.Stack {
     });
 
     const topic = new sns.Topic(this, 'createProductTopic', {
-      topicName: 'createProductTopic',
+      topicName: 'createProductTopicNotification',
     });
 
-    new sns.Subscription(this, 'importQueue', {
-      endpoint: process.env.TOPIC_EMAIL as string,
-      protocol: SubscriptionProtocol.EMAIL,
+    new sns.Subscription(this, 'createProductTopicSubscription', {
       topic: topic,
+      protocol: sns.SubscriptionProtocol.EMAIL,
+      endpoint: process.env.TOPIC_EMAIL as string,
     });
+
+    new sns.Subscription(this, 'createProductTopicLowCountSubscription', {
+      topic: topic,
+      protocol: sns.SubscriptionProtocol.EMAIL,
+      endpoint: process.env.ADDITIONAL_TOPIC_EMAIL as string,
+      filterPolicy: {
+        count: sns.SubscriptionFilter.numericFilter({ lessThan: 5 }),
+      },
+    });
+
+    // topic.addSubscription(
+    //   new subscriptions.EmailSubscription(process.env.TOPIC_EMAIL as string, {
+    //     filterPolicy: {
+    //       count: sns.SubscriptionFilter.numericFilter({
+    //         lessThanOrEqualTo: 10,
+    //       }),
+    //     },
+    //   }),
+    // );
+    //
+    // topic.addSubscription(
+    //   new subscriptions.EmailSubscription(process.env.ADDITIONAL_TOPIC_EMAIL as string, {
+    //     filterPolicy: {
+    //       count: sns.SubscriptionFilter.numericFilter({
+    //         greaterThan: 10,
+    //       }),
+    //     },
+    //   }),
+    // );
 
     const environment = {
       TABLE_NAME_PRODUCT: table.tableName,
@@ -63,6 +91,7 @@ export class NodejsAwsShopReactBeStack extends cdk.Stack {
 
     const catalogBatchProcess = new NodejsFunction(this, 'CatalogBatchProcessHandler', {
       environment,
+      timeout: cdk.Duration.seconds(30),
       functionName: 'catalogBatchProcess',
       runtime: lambda.Runtime.NODEJS_18_X,
       entry: 'src/handlers/catalogBatchProcess.ts',

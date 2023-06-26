@@ -2,7 +2,6 @@
 import { buildResponse, validateBody } from '../utils';
 import httpStatusCode from '../type/httpStatusCode';
 import { EMessage, IProduct, IStock, TCreatedProduct, TError } from '../type';
-import { Handler } from 'aws-cdk-lib/aws-lambda';
 import { v4 as uuidv4 } from 'uuid';
 import { createProduct } from '../dynamoDB';
 import { snsClient } from '../libs/sns';
@@ -32,6 +31,12 @@ export const handler = async (event) => {
           Subject: 'New product',
           TopicArn: SNS_ARN,
           Message: JSON.stringify({ id: id, description: description, title: title, price: price, count: count }),
+          MessageAttributes: {
+            count: {
+              DataType: 'Number',
+              StringValue: String(count),
+            },
+          },
         }),
       );
     }
