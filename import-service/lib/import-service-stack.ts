@@ -28,6 +28,12 @@ export class ImportServiceStack extends cdk.Stack {
       SQS_URL: queue.queueUrl,
     };
 
+    const authLambda = lambda.Function.fromFunctionArn(this, 'authLambda', process.env.AUTH_LAMBDA_ARN as string);
+    const authorizer = new apiGw.TokenAuthorizer(this, 'basicAuthorizer', {
+      handler: authLambda,
+      identitySource: apiGw.IdentitySource.header('Authorization'),
+    });
+
     const importProductFiles = new NodejsFunction(this, 'GetProductsListHandler', {
       environment,
       functionName: 'importProductFiles',
@@ -75,7 +81,9 @@ export class ImportServiceStack extends cdk.Stack {
     queue.grantSendMessages(importFileParser);
 
     importProductFilesResource.addCorsPreflight(CORS_PREFLIGHT_SETTINGS);
+    // authorizer.bind(importProductFilesResource);
     importProductFilesResource.addMethod('GET', importProductFilesIntegration, {
+      authorizer: authorizer,
       methodResponses: [
         {
           statusCode: '200',
