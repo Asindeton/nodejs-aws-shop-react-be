@@ -3,8 +3,7 @@ import httpStatusCode from '../type/httpStatusCode';
 import { EMessage, TError } from '../type';
 import { getAllData } from '../dynamoDB';
 
-export const handler = async (event: unknown) => {
-  console.log('getAllProduct', event);
+export const handler = async () => {
   try {
     const { TABLE_NAME_PRODUCT, TABLE_NAME_STOCK } = process.env;
 

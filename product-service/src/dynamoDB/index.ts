@@ -46,7 +46,7 @@ export const getRecord = async (tableName: string, key: string, id: string) => {
 
 export const createProduct = async (product: IProduct, stock: IStock, productTable: string, stockTable: string) => {
   try {
-    await dynamoDbDocClient.send(
+    return await dynamoDbDocClient.send(
       new TransactWriteCommand({
         TransactItems: [
           {
@@ -66,6 +66,6 @@ export const createProduct = async (product: IProduct, stock: IStock, productTab
     );
   } catch (err) {
     console.log(err);
-    throw err;
+    return err;
   }
 };
